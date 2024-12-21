@@ -1,0 +1,46 @@
+使用LOG函数而不用printf的原因:print是不可重入函数，操作系统中使用会导致线程不安全。（不可重入函数就是函数中包含了全局变量，未返回之前再次重入会导致冲突和错误）	
+	
+ESP_EARLY_LOGE(tag, format, ...)	在启动文件中打印日志，早于堆分配和系统调用被初始化之前
+ESP_EARLY_LOGW(tag, format, ...)	
+ESP_EARLY_LOGI(tag, format, ...)	
+ESP_EARLY_LOGD(tag, format, ...)	
+ESP_EARLY_LOGV(tag, format, ...)	VERBOSE 啰嗦的
+ESP_LOG_EARLY_IMPL(tag, format, log_level, log_tag_letter, ...)	
+	
+ESP_LOGE(tag, format, ...)	用于在调用esp_log_write之前检查ESP_LOGx 以确定主日志等级。
+ESP_LOGW(tag, format, ...)	
+ESP_LOGI(tag, format, ...)	
+ESP_LOGD(tag, format, ...)	
+ESP_LOGV(tag, format, ...)	
+	
+ESP_LOG_LEVEL(level, tag, format, ...)	
+ESP_LOG_LEVEL_LOCAL(level, tag, format, ...)	
+	
+ESP_DRAM_LOGE(tag, format, ...)	Cache缓存被禁止时，输出错误级别的日志。日志等级写死，无法用esp_log_level_set设置其日志等级
+ESP_DRAM_LOGW(tag, format, ...)	
+ESP_DRAM_LOGI(tag, format, ...)	
+ESP_DRAM_LOGD(tag, format, ...)	
+ESP_DRAM_LOGV(tag, format, ...)	
+	
+CONFIG_LOG_DEFAULT_LEVEL	
+static inline esp_log_level_t esp_log_get_default_level(void)	获取当前的默认的日志级别，低于该默认日志级别的日志将会被启用
+CONFIG_LOG_MAXIMUM_LEVEL	
+void esp_log_set_level_master(esp_log_level_t level)	设置日志最大打印级别，可以设置高于CONFIG_LOG_MAXIMUM_LEVEL，代价是增大应用程序的大小
+esp_log_level_t esp_log_get_level_master(void)	返回主日志级别
+LOG_LOCAL_LEVEL	
+void esp_log_level_set(const char *tag, esp_log_level_t level)	按模块设置日志级别。前提是使能 CONFIG_LOG_DYNAMIC_LEVEL_CONTROL 
+	esp_log_level_set("my_module", ESP_LOG_WARN)；// 将"my_module"模块的日志级别设置为WARN
+	esp_log_level_set("*", ESP_LOG_INFO)；// 将所有模块的日志级别即CONFIG_LOG_DEFAULT_LEVEL设置为INFO
+	"无法将日志级别设置为高于 CONFIG_LOG_MAXIMUM_LEVEL 指定的级别,如需在编译时将特定文件的日志级别提高到此最高级别以上，请在文件包含esp_log.h之前 使用 LOG_LOCAL_LEVEL 定义文件宏。
+#define LOG_LOCAL_LEVEL ESP_LOG_WARN
+#include ""esp_log.h"""
+esp_log_level_t esp_log_level_get(const char *tag)	
+	
+LOG_LOCAL_LEVEL > CONFIG_LOG_DEFAULT_LEVEL	
+CONFIG_LOG_MAXIMUM_LEVEL > LOG_LOCAL_LEVEL	
+CONFIG_LOG_DEFAULT_LEVEL 是项目的全局默认日志级别，影响所有模块，但它可以被 esp_log_level_set和 LOG_LOCAL_LEVEL 覆盖。	
+LOG_LOCAL_LEVEL 的优先级高于CONFIG_LOG_DEFAULT_LEVEL，并且只能影响定义了它的源文件。如果某文件定义了 #define LOG_LOCAL_LEVEL ESP_LOG_WARN，即便全局日志级别为 INFO，该文件仍会限制在 WARN 及以上。	
+	
+CONFIG_LOG_MAXIMUM_LEVEL ＞ CONFIG_LOG_DEFAULT_LEVEL	
+CONFIG_LOG_MAXIMUM_LEVEL 默认被配置为 CONFIG_LOG_DEFAULT_LEVEL，可以被配置为更高级别，将更多的可选日志编译到固件中	
+CONFIG_LOG_DEFAULT_LEVEL不能高于CONFIG_LOG_MAXIMUM_LEVEL。如果尝试将CONFIG_LOG_DEFAULT_LEVEL设置为高于CONFIG_LOG_MAXIMUM_LEVEL的值，则实际生效的日志级别将是CONFIG_LOG_MAXIMUM_LEVEL	

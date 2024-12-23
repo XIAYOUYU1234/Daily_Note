@@ -1,0 +1,28 @@
+一、模式分类：
+	Modem-sleep
+	Light-sleep
+	Deep-sleep
+二、休眠外设:	
+	Modem-sleep：
+	Light-sleep：
+	Deep-sleep：ROM 和 RAM 均将断电，
+三、睡眠方式：
+	Light-sleep：调用API/自动进入的auto模式
+	Deep-sleep：调用API
+四、睡眠时关闭的模块
+	Light-sleep：休眠时
+	Deep-sleep：休眠时会关闭除 RTC 控制器、RTC 外设、ULP 协处理器、RTC 高速内存、RTC 低速内存外的所有模块。
+五、唤醒方式：
+	Modem-sleep：
+	Light-sleep： RTC 定时器、触摸传感器、外部唤醒 (ext0)、外部唤醒 (ext1)、ULP 协处理器、SDIO、GPIO、UART、Wi-Fi、BT 唤醒等
+	Deep-sleep ：RTC 定时器、触摸传感器、外部唤醒 (ext0)、外部唤醒 (ext1)、ULP 协处理器、GPIO 唤醒等
+EXT0：EXT0 仅可将芯片从 Light-sleep/Deep-sleep 模式中唤醒。当 RTC_CNTL_EXT_WAKEUP0_LV 为 1 时将触发管脚高电平，否则触发管脚低电平。用户可通过设置 RTCIO_EXT_WAKEUP0_SEL 选择作为唤醒源的 RTC 管脚。
+EXT1：EXT1 经过专门设计，可将芯片从任何睡眠模式中唤醒，而且还支持多个管脚的组合。首先，应按照选定作为唤醒源的管脚位图，配置 RTC_CNTL_EXT_WAKEUP1_SEL[17:0]。当 RTC_CNTL_EXT_WAKEUP1_LV == 1 时，任何选中管脚之一为高电压则将触发信号唤醒芯片；当 RTC_CNTL_REG_EXT_WAKEUP1_LV == 0 时，所有选中管脚为高电压才能触发信号唤醒芯片。
+GPIO：在 Deep-sleep 模式下，该唤醒源仅有 RTC GPIO 可以作为唤醒源。
+UART0/UART1：当接收到的 RX 脉冲数量超过阈值寄存器中的设置时，即触发唤醒。
+TOUCH Active： 当触摸传感器检测到触摸时，即触发唤醒。
+ULP-FSM：当超低功耗协处理器配置寄存器 RTC_CNTL_RTC_SW_CPU_INT，即触发唤醒。
+ULP-RISC-V：当超低功耗协处理器进入捕获异常事件时（比如堆栈溢出），即触发唤醒。
+Wi-Fi/BT：为了通过 Wi-Fi 或 BT 唤醒芯片，芯片将在 Active、Modem-sleep 和 Light-sleep 之间进行切换，CPU 和 RF 模块均将在预设间隔中唤醒，保证 Wi-Fi 和 BT 的正常连接和数据通信。
+
+以上的所有唤醒源均可配置为拒绝睡眠原因，但 UART 除外。
